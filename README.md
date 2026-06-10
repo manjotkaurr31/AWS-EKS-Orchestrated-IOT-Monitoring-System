@@ -220,7 +220,7 @@ EKS credentials are injected via GitHub Actions secrets. Rolling deployments ens
 
 **EKS Pod Identity over node-level roles** - Attaching broad IAM permissions to the EC2 node role gives every pod on that node the same access. Pod Identity scopes credentials per workload: the API can only send to SQS; the worker can only receive, delete, write to RDS, and publish metrics.
 
-**CloudWatch custom metrics for operational alerting** - Pushing application-level signals (threshold violations) as custom metrics allows CloudWatch Alarms to trigger SNS notifications without any additional monitoring infrastructure. The full loop - device reading → processed → alert in inbox - runs end to end.
+**CloudWatch custom metrics for operational alerting** - Pushing application-level signals (threshold violations) as custom metrics allows CloudWatch Alarms to trigger SNS notifications without any additional monitoring infrastructure. The full loop - device reading - processed - alert in inbox - runs end to end.
 
 **Kubernetes Deployments for self-healing** - If a worker pod crashes, Kubernetes restarts it automatically. The SQS message visibility timeout ensures the unprocessed message becomes visible again and is picked up by another pod - no manual intervention, no data loss.
 
