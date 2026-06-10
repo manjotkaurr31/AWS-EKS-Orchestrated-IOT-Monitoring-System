@@ -1,6 +1,6 @@
 # IOT Monitoring Platform on Amazon EKS
 
-A cloud-native IOT Monitoring Platform built on Amazon EKS. The platform ingests telemetry from simulated factory devices, processes it asynchronously using Amazon SQS, persists historical records in PostgreSQL on Amazon RDS, and publishes threshold violations as custom metrics to Amazon CloudWatch — with SNS-driven email alerting.
+A cloud-native IOT Monitoring Platform built on Amazon EKS. The platform ingests telemetry from simulated factory devices, processes it asynchronously using Amazon SQS, persists historical records in PostgreSQL on Amazon RDS, and publishes threshold violations as custom metrics to Amazon CloudWatch - with SNS-driven email alerting.
 
 ---
 
