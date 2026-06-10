@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.so
+
+venv/
+.env
+
+*.log
+
+.DS_Store
+.pytest_cache/
+.coverage
+htmlcov/
+
+k8s/secret.yaml

@@ -1,0 +1,9 @@
+devices:
+  - device_id: boiler-01
+    device_type: boiler
+
+  - device_id: conveyor-01
+    device_type: conveyor
+
+  - device_id: storage-01
+    device_type: storage
