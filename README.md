@@ -6,7 +6,7 @@ A cloud-native IOT Monitoring Platform built on Amazon EKS. The platform ingests
 
 ## Overview
 
-Factory environments generate continuous streams of sensor data — boiler temperatures, conveyor RPMs, storage humidity — that need to be captured reliably, processed without data loss, and surfaced as operational alerts when readings cross safety thresholds.
+Factory environments generate continuous streams of sensor data, boiler temperatures, conveyor RPMs, storage humidity, that need to be captured reliably, processed without data loss, and surfaced as operational alerts when readings cross safety thresholds.
 
 This platform addresses that problem with a decoupled, queue-based architecture. The ingestion layer accepts and acknowledges messages immediately, keeping response times low and isolating the HTTP surface from any downstream slowness. Workers consume from the queue at their own pace and handle persistence and alerting independently. A Dead Letter Queue catches any message that fails repeatedly, ensuring nothing is silently dropped.
 
@@ -55,7 +55,7 @@ The system demonstrates Kubernetes deployments on EKS, EKS Pod Identity for cred
 
 ### Ingestion Flow
 
-1. The Python device simulator generates telemetry for 1,000 logical devices — boilers, conveyors, and storage units — and sends each reading to the FastAPI ingestion endpoint.
+1. The Python device simulator generates telemetry for 1,000 logical devices (boilers, conveyors, and storage units) and sends each reading to the FastAPI ingestion endpoint.
 2. The API validates the payload and publishes it to the SQS main queue, returning `202 Accepted` immediately.
 3. Worker pods poll the queue, persist each record to PostgreSQL, and evaluate readings against predefined thresholds.
 4. Messages that fail processing after the maximum retry count are moved to the Dead Letter Queue.
@@ -214,28 +214,28 @@ EKS credentials are injected via GitHub Actions secrets. Rolling deployments ens
 
 ## Key Learnings
 
-**Queue-based decoupling** — Separating ingestion from processing means the API never slows down due to database latency or CloudWatch API hiccups. The queue absorbs burst traffic naturally; workers process at their own pace.
+**Queue-based decoupling** - Separating ingestion from processing means the API never slows down due to database latency or CloudWatch API hiccups. The queue absorbs burst traffic naturally; workers process at their own pace.
 
-**Dead Letter Queue as a safety net** — Without a DLQ, a malformed or unprocessable message could block the queue indefinitely. Configuring a maxReceiveCount and routing failures to the DLQ means bad messages are isolated and inspectable without affecting throughput.
+**Dead Letter Queue as a safety net** - Without a DLQ, a malformed or unprocessable message could block the queue indefinitely. Configuring a maxReceiveCount and routing failures to the DLQ means bad messages are isolated and inspectable without affecting throughput.
 
-**EKS Pod Identity over node-level roles** — Attaching broad IAM permissions to the EC2 node role gives every pod on that node the same access. Pod Identity scopes credentials per workload: the API can only send to SQS; the worker can only receive, delete, write to RDS, and publish metrics.
+**EKS Pod Identity over node-level roles** - Attaching broad IAM permissions to the EC2 node role gives every pod on that node the same access. Pod Identity scopes credentials per workload: the API can only send to SQS; the worker can only receive, delete, write to RDS, and publish metrics.
 
-**CloudWatch custom metrics for operational alerting** — Pushing application-level signals (threshold violations) as custom metrics allows CloudWatch Alarms to trigger SNS notifications without any additional monitoring infrastructure. The full loop — device reading → processed → alert in inbox — runs end to end.
+**CloudWatch custom metrics for operational alerting** - Pushing application-level signals (threshold violations) as custom metrics allows CloudWatch Alarms to trigger SNS notifications without any additional monitoring infrastructure. The full loop - device reading → processed → alert in inbox - runs end to end.
 
-**Kubernetes Deployments for self-healing** — If a worker pod crashes, Kubernetes restarts it automatically. The SQS message visibility timeout ensures the unprocessed message becomes visible again and is picked up by another pod — no manual intervention, no data loss.
+**Kubernetes Deployments for self-healing** - If a worker pod crashes, Kubernetes restarts it automatically. The SQS message visibility timeout ensures the unprocessed message becomes visible again and is picked up by another pod - no manual intervention, no data loss.
 
-**jsonb in PostgreSQL for flexible payloads** — Different device types produce different metric shapes. Storing the payload as `jsonb` avoids schema migrations when new device types are added, while still allowing indexed queries on payload fields.
+**jsonb in PostgreSQL for flexible payloads** - Different device types produce different metric shapes. Storing the payload as `jsonb` avoids schema migrations when new device types are added, while still allowing indexed queries on payload fields.
 
 ---
 
 ## Future Improvements
 
-- **KEDA autoscaling** — Scale worker replica count automatically based on SQS queue depth, so the system handles burst ingestion without over-provisioning idle pods.
-- **AWS Load Balancer Controller** — Expose the ingestion API through an Application Load Balancer with TLS termination, replacing internal cluster networking only.
-- **Grafana dashboards** — Visualise telemetry trends and threshold violations with time-series dashboards sourced from CloudWatch or a Prometheus scrape target.
-- **End-to-end integration tests in CI** — Add a pipeline stage that runs the simulator against a staging environment and asserts that records land in RDS and metrics appear in CloudWatch before deploying to production.
-- **Helm charts** — Package the Kubernetes manifests into a Helm chart to make environment-specific configuration (staging vs production queue URLs, replica counts, thresholds) clean and repeatable.
-- **Infrastructure as Code** — Replace manual AWS console setup with Terraform covering VPC, EKS cluster and node group, RDS, SQS, SNS, ECR, and IAM roles.
+- **KEDA autoscaling** - Scale worker replica count automatically based on SQS queue depth, so the system handles burst ingestion without over-provisioning idle pods.
+- **AWS Load Balancer Controller** - Expose the ingestion API through an Application Load Balancer with TLS termination, replacing internal cluster networking only.
+- **Grafana dashboards** - Visualise telemetry trends and threshold violations with time-series dashboards sourced from CloudWatch or a Prometheus scrape target.
+- **End-to-end integration tests in CI** - Add a pipeline stage that runs the simulator against a staging environment and asserts that records land in RDS and metrics appear in CloudWatch before deploying to production.
+- **Helm charts** - Package the Kubernetes manifests into a Helm chart to make environment-specific configuration (staging vs production queue URLs, replica counts, thresholds) clean and repeatable.
+- **Infrastructure as Code** - Replace manual AWS console setup with Terraform covering VPC, EKS cluster and node group, RDS, SQS, SNS, ECR, and IAM roles.
 
 ---
 
