@@ -1,8 +1,8 @@
 ## Demonstration
 
-### EKS Cluster — telemetry-cluster
+### EKS Cluster: telemetry-cluster
 
-`telemetry-cluster` running Kubernetes 1.35 in `ap-south-1`, status **Active**. Zero cluster health issues, zero node health issues.
+`telemetry-cluster` running Kubernetes status Active. Zero cluster health issues, zero node health issues.
 
 <img src="./screenshots/eks_cluster.png" width="800"/>
 
@@ -10,34 +10,34 @@
 
 ### EKS Nodes
 
-Two `t3.small` worker nodes in the `telemetry-ng` managed node group, both **Ready**.
+Two `t3.small` worker nodes in the `telemetry-ng` managed node group, both Ready.
 
 <img src="./screenshots/eks_nodes.png" width="800"/>
 
 ---
 
-### ECR — Docker Images
+### ECR: Docker Images
 
-Two private repositories: `api` and `worker`, both created June 10, 2026. Images are pushed by the GitHub Actions CI/CD pipeline on every push to `main`.
+Two private repositories: `api` and `worker`. Images are pushed by the GitHub Actions CI/CD pipeline on every push to `main`.
 
 <img src="./screenshots/ecr_repositories.png" width="800"/>
 
 ---
 
-### Amazon SQS — Queues
+### Amazon SQS: Queues
 
 Two queues provisioned with SSE-SQS encryption:
 
-- `telemetry-queue` — main ingestion queue, 0 messages in flight after full processing run
-- `telemetry-dlq` — Dead Letter Queue, holding 2 messages from failed processing attempts
+- `telemetry-queue` — main ingestion queue
+- `telemetry-dlq` — Dead Letter Queue
 
 <img src="./screenshots/queues.png" width="800"/>
 
 ---
 
-### Amazon RDS — telemetrydb
+### Amazon RDS: telemetrydb
 
-PostgreSQL instance `telemetrydb` on `db.t4g.micro` in `ap-south-1b`, status **Available**, CPU at 4.08%.
+PostgreSQL instance `telemetrydb` status Available.
 
 <img src="./screenshots/rds_instance.png" width="800"/>
 
@@ -53,13 +53,13 @@ SELECT * FROM telemetry ORDER BY created_at DESC LIMIT 5;
 
 <img src="./screenshots/psql_records.png" width="800"/>
 
-**Table schema** — `\d telemetry` confirms the structure: uuid primary key, varchar device fields, jsonb payload, and timestamptz for both `recorded_at` and `created_at`.
+Table schema `\d telemetry`
 
 <img src="./screenshots/psql_schema.png" width="800"/>
 
 ---
 
-### Device Simulator — Complete
+### Device Simulator: Complete
 
 The simulator ran to completion: 1,000 logical devices created, 1,000 messages sent. Every device posted its reading to the ingestion API and received `202 Accepted`.
 
@@ -67,7 +67,7 @@ The simulator ran to completion: 1,000 logical devices created, 1,000 messages s
 
 ---
 
-### Ingestion API — 202 Accepted
+### Ingestion API: 202 Accepted
 
 FastAPI access logs confirming every `POST /telemetry` request returned `202 Accepted`. All requests originating from the simulator IP are queued without error.
 
@@ -75,7 +75,7 @@ FastAPI access logs confirming every `POST /telemetry` request returned `202 Acc
 
 ---
 
-### Telemetry Worker — Processing
+### Telemetry Worker: Processing
 
 Worker logs showing continuous `Processed message for device <device_id>` output across all three device types: boilers, conveyors, and storage units.
 
@@ -83,9 +83,9 @@ Worker logs showing continuous `Processed message for device <device_id>` output
 
 ---
 
-### Docker Containers — Local Validation
+### Docker Containers: Local Validation
 
-Before deploying to EKS, both images were built locally and validated with `docker run`. `docker ps` confirms both `telemetry-api` and `telemetry-worker` containers running, with the API exposed on `0.0.0.0:8000`.
+Before deploying to EKS, both images were built locally and validated with `docker run`. `docker ps` confirms both `telemetry-api` and `telemetry-worker` containers running.
 
 Images were then tagged and pushed to ECR:
 
@@ -108,13 +108,13 @@ Four alarms configured against custom metrics published by the worker:
 | RPM Anomaly-High | HighRPM threshold | In alarm |
 | RPM Anomaly-LOW | LowRPM threshold | In alarm |
 
-All four alarms triggered at `2026-06-09 20:57` UTC, confirming the worker is correctly publishing metrics when device readings exceed thresholds.
+All four alarms triggered, confirming the worker is correctly publishing metrics when device readings exceed thresholds.
 
 <img src="./screenshots/cloudwatch_alarms.png" width="800"/>
 
 ---
 
-### SNS Topic — Default_CloudWatch_Alarms_Topic
+### SNS Topic: Default_CloudWatch_Alarms_Topic
 
 CloudWatch alarms publish to the `Default_CloudWatch_Alarms_Topic` SNS topic. One confirmed email subscription (`manjotkaurr31@gmail.com`) receives all alarm notifications.
 
@@ -124,11 +124,11 @@ CloudWatch alarms publish to the `Default_CloudWatch_Alarms_Topic` SNS topic. On
 
 ### Email Alerts
 
-Gmail inbox showing live alarm notifications from AWS. Alarms — Humidity Anomaly, RPM Anomaly-High, and Temperature Anomaly — fired at `02:27` and delivered to inbox.
+Gmail inbox showing live alarm notifications from AWS. Alarms - Humidity Anomaly, RPM Anomaly-High, and Temperature Anomaly- fired and delivered to inbox.
 
 <img src="./screenshots/alarm_emails.png" width="800"/>
 
-**RPM Anomaly-High** alarm email detail. CloudWatch detected the threshold was crossed (`2.0 datapoints ≥ 1.0`) and transitioned from `INSUFFICIENT_DATA → ALARM` at `2026-06-09 20:31:23 UTC`.
+**RPM Anomaly-High** alarm email detail. CloudWatch detected the threshold was crossed (`2 datapoints ≥ 1`) and transitioned from `INSUFFICIENT_DATA` to `ALARM`.
 
 <img src="./screenshots/mail.png" width="800"/>
 
@@ -142,7 +142,7 @@ IAM role attached to the EC2 instance used for local development and ECR push. F
 - `AmazonEKSClusterPolicy`
 - `AmazonSQSFullAccess`
 - `CloudWatchFullAccess`
-- `EKSDescribeCluster` (customer inline)
+- `EKSDescribeCluster` (custom inline)
 
 <img src="./screenshots/iam_ec2_role.png" width="800"/>
 
@@ -163,6 +163,6 @@ IAM role attached to EKS worker nodes. Four AWS managed policies covering ECR re
 
 ### EC2 Instances
 
-Three EC2 instances running in `ap-south-1` — the `telemetry` development instance (`t3.micro`) and two EKS node group instances (`t3.small`), all passing 3/3 status checks.
+Three EC2 instances running in `ap-south-1` - the `telemetry` development instance (`t3.micro`) and two EKS node group instances (`t3.small`), all passing 3/3 status checks.
 
 <img src="./screenshots/ec2_instances.png" width="800"/>
