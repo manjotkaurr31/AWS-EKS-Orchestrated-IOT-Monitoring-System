@@ -1,0 +1,61 @@
+name: Worker CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "worker/**"
+      - "Dockerfile.worker"
+      - "requirements.txt"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Worker image
+        run: |
+          docker build \
+            -f Dockerfile.worker \
+            -t worker:${{ github.sha }} .
+
+      - name: Tag Worker image
+        run: |
+          docker tag worker:${{ github.sha }} \
+          370613533360.dkr.ecr.ap-south-1.amazonaws.com/worker:${{ github.sha }}
+
+      - name: Push Worker image
+        run: |
+          docker push \
+          370613533360.dkr.ecr.ap-south-1.amazonaws.com/worker:${{ github.sha }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ap-south-1 \
+            --name telemetry-cluster
+
+      - name: Deploy Worker
+        run: |
+          kubectl set image deployment/telemetry-worker \
+          worker=370613533360.dkr.ecr.ap-south-1.amazonaws.com/worker:${{ github.sha }} \
+          -n telemetry
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/telemetry-worker \
+          -n telemetry
